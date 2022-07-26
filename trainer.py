@@ -1,0 +1,49 @@
+from dataset_loader import SummaryWithKeywordDataModule
+from load_data import get_train_test_validation
+from transformers import LongformerTokenizer, LongformerModel
+import pytorch_lightning as pl
+from pytorch_lightning.callbacks import ModelCheckpoint
+import torch
+from model import LongDocumentSummarizerModel
+import os
+print(torch.__version__)
+print(torch.cuda.device_count())
+print(torch.cuda.is_available())
+
+from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
+
+MODEL_NAME_OR_PATH = 'allenai/longformer-base-4096'
+N_EPOCHS = 5
+
+df_train, df_validation, df_test = get_train_test_validation()
+tokenizer = LongformerTokenizer.from_pretrained(MODEL_NAME_OR_PATH, cls_token='[CLS]', sep_token='[SEP]')
+longformer_model = LongformerModel.from_pretrained(MODEL_NAME_OR_PATH)
+longformer_model.resize_token_embeddings(len(tokenizer))
+
+data_module = SummaryWithKeywordDataModule(train_df=df_train,
+                                           validation_df=df_validation,
+                                           test_df=df_test,
+                                           tokenizer=tokenizer)
+
+model = LongDocumentSummarizerModel(longformer_model, tokenizer)
+
+checkpoint_callback = ModelCheckpoint(dirpath="./checkpoints",
+                                      filename="summarizer-checkpoint",
+                                      save_top_k=1,
+                                      verbose=True,
+                                      monitor="val_loss",
+                                      mode="min")
+
+logger = TensorBoardLogger("./logs",
+                           name="longformer-summarizer",
+                           )
+num_gpus = torch.cuda.device_count()
+
+trainer = pl.Trainer(logger=logger,
+                     checkpoint_callback=checkpoint_callback,
+                     max_epochs=N_EPOCHS,
+                     progress_bar_refresh_rate=30,
+                     gpus=1
+                     )
+if __name__ == "__main__":
+    trainer.fit(model, data_module)
