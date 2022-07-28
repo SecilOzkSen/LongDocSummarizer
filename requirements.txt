@@ -1,7 +1,6 @@
 huggingface_hub==0.2.1
 numpy==1.22.3
 pip==21.2.4
-python==3.8.13
 pytorch==1.11.0
 pytorch-mutex==1.0
 pyyaml==6.0
