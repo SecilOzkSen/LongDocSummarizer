@@ -43,7 +43,6 @@ trainer = pl.Trainer(logger=logger,
                      checkpoint_callback=checkpoint_callback,
                      max_epochs=N_EPOCHS,
                      progress_bar_refresh_rate=30,
-                     gpus=1
                      )
 if __name__ == "__main__":
     trainer.fit(model, data_module)

@@ -73,7 +73,7 @@ def get_train_test_validation(extract_keywords = False):
         training_data = extract_keywords(training_data)
         validation_data = extract_keywords(validation_data)
         test_data = extract_keywords(test_data)
-    return training_data, validation_data, test_data
+    return training_data[0:10000], validation_data[0:1000], test_data[0:1000]
 
 '''if __name__ == '__main__':
     _, validation_data, test_data = get_train_test_validation()
