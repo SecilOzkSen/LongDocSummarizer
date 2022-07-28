@@ -49,7 +49,6 @@ ninja-base==1.10.2
 numpy==1.22.3
 numpy-base==1.22.3
 openh264==2.1.1
-openssl=1.1.1q=h7f8727e_0
 packaging==21.3
 pip==21.2.4
 pycparser==2.21
