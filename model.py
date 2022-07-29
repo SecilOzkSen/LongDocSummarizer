@@ -187,6 +187,11 @@ class LongDocumentSummarizerModel(LightningModule):
         ground_truth = self.get_ground_truth_labels(document_id, source="train")
         predictions = self.produce_summary_labels(outputs, text_sentence_length)
 
+        if len(predictions) != len(ground_truth):
+            min_length = min(len(predictions), len(ground_truth))
+            ground_truth = ground_truth[0:min_length]
+            predictions = predictions[0:min_length]
+
         loss = self.loss_calculation(predictions, ground_truth)
         self.log("train_loss", loss, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
         return torch.autograd.Variable(loss, requires_grad=True)
