@@ -126,7 +126,7 @@ class LongDocumentSummarizerModel(LightningModule):
 
 
     def produce_text_summary(self, predictions, sentence_list):
-        rounded = np.where(predictions > 0.5, 1., 0.)# threshold
+        rounded = np.where(predictions > 0.6, 1., 0.)# threshold
         summary_sentences = []
         for idx, i in enumerate(rounded):
             if i == 1:
@@ -208,6 +208,11 @@ class LongDocumentSummarizerModel(LightningModule):
         ground_truth = self.get_ground_truth_labels(document_id, source="validation")
         predictions = self.produce_summary_labels(outputs, text_sentence_length)
         produced_summary, rounded_predictions = self.produce_text_summary(predictions, sentence_list)
+
+        if len(rounded_predictions) != len(ground_truth):
+            min_length = min(len(rounded_predictions), len(ground_truth))
+            rounded_predictions = rounded_predictions[0:min_length]
+            ground_truth = ground_truth[0:min_length]
 
         f1 = self.calculate_F1(rounded_predictions, ground_truth)
 
