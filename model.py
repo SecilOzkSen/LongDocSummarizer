@@ -213,6 +213,7 @@ class LongDocumentSummarizerModel(LightningModule):
             min_length = min(len(rounded_predictions), len(ground_truth))
             rounded_predictions = rounded_predictions[0:min_length]
             ground_truth = ground_truth[0:min_length]
+            predictions = predictions[0:min_length]
 
         f1 = self.calculate_F1(rounded_predictions, ground_truth)
 
@@ -246,6 +247,11 @@ class LongDocumentSummarizerModel(LightningModule):
 
         ground_truth = self.get_ground_truth_labels(document_id, source="test")
         predictions = self.produce_summary_labels(outputs, text_sentence_length)
+
+        if len(predictions) != len(ground_truth):
+            min_length = min(len(predictions), len(ground_truth))
+            predictions = predictions[0:min_length]
+            ground_truth = ground_truth[0:min_length]
 
         loss = self.loss_calculation(predictions, ground_truth)
         self.log("test_loss", loss, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
