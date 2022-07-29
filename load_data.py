@@ -1,7 +1,7 @@
 import numpy as np
 from datasets import load_dataset
-from keybert import KeyBERT
-keybert = KeyBERT()
+#from keybert import KeyBERT
+#keybert = KeyBERT()
 from sentence_transformers import SentenceTransformer, util
 import spacy
 
@@ -52,7 +52,7 @@ def clean_dataset(dataset):
     dataset["article"] = dataset["article"].apply(lambda x: clean_article(x))
     return dataset
 
-def extract_keywords(dataset):
+'''def extract_keywords(dataset):
     def extract_keyword(doc):
         keywords = keybert.extract_keywords(doc)
         keywords_list = []
@@ -60,7 +60,7 @@ def extract_keywords(dataset):
             keywords_list.append(keyword[0])
         return keywords_list
     dataset["keyword"] = dataset["article"].apply(lambda x: extract_keyword(x))
-    return dataset
+    return dataset'''
 
 def get_train_test_validation(extract_keywords = False):
     training_data = load_dataset("cnn_dailymail", '3.0.0', split="train")
