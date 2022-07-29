@@ -37,7 +37,7 @@ class CNNDailyMailDataset(Dataset):
             if sentence_length >= self.padding_limit:
                 break
             sentence_list.append(sentence.text)
-            new_sentence = f"[CLS] {sentence.text} [SEP] "
+            new_sentence = f"<s> {sentence.text} </s> "
             new_doc += new_sentence
             sentence_length += 1
 
