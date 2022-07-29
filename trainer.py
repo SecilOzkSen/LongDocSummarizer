@@ -43,8 +43,7 @@ trainer = pl.Trainer(logger=logger,
                      checkpoint_callback=checkpoint_callback,
                      max_epochs=N_EPOCHS,
                      progress_bar_refresh_rate=30,
-                     callbacks=[EarlyStopping(monitor="val_accuracy", min_delta=0.00, patience=3, verbose=False, mode="max")],
-                     gpus=1,
+                     callbacks=[EarlyStopping(monitor="val_f1", min_delta=0.00, patience=3, verbose=False, mode="max")],
                      accelerator='gpu'
                      )
 if __name__ == "__main__":
