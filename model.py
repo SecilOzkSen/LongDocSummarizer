@@ -209,8 +209,8 @@ class LongDocumentSummarizerModel(LightningModule):
         predictions = self.produce_summary_labels(outputs, text_sentence_length)
         produced_summary, rounded_predictions = self.produce_text_summary(predictions, sentence_list)
 
-        if len(rounded_predictions) != len(ground_truth):
-            min_length = min(len(rounded_predictions), len(ground_truth))
+        if len(predictions) != len(ground_truth):
+            min_length = min(len(predictions), len(ground_truth))
             rounded_predictions = rounded_predictions[0:min_length]
             ground_truth = ground_truth[0:min_length]
             predictions = predictions[0:min_length]
