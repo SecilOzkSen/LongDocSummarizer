@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 import torch
 from model import LongDocumentSummarizerModel
-import os
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 print(torch.__version__)
 print(torch.cuda.device_count())
 print(torch.cuda.is_available())
@@ -43,6 +43,9 @@ trainer = pl.Trainer(logger=logger,
                      checkpoint_callback=checkpoint_callback,
                      max_epochs=N_EPOCHS,
                      progress_bar_refresh_rate=30,
+                     callbacks=[EarlyStopping(monitor="val_accuracy", min_delta=0.00, patience=3, verbose=False, mode="max")],
+                     gpus=1,
+                     accelerator='gpu'
                      )
 if __name__ == "__main__":
     trainer.fit(model, data_module)
