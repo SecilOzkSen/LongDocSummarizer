@@ -8,6 +8,7 @@ import numpy as np
 import torch.nn.functional as F
 import pandas as pd
 from sklearn.metrics import f1_score
+import spacy
 
 rouge_v2 = Rouge()
 
@@ -60,6 +61,8 @@ class LongDocumentSummarizerModel(LightningModule):
     def __init__(self,
                  model,
                  tokenizer,
+                 batch_size,
+                 cls_token_id,
                  top_k: int = 5,
                  ):
         super().__init__()
@@ -69,17 +72,28 @@ class LongDocumentSummarizerModel(LightningModule):
         self.positional_encoding = PositionalEncoding(dropout=0.1, dim=768)
         self.classifier = Classifier(hidden_size=768, out_size=1)
         self.top_k = top_k
-        self.gt_train_labels = pd.read_csv("training_labels.csv", delimiter='\t')
-        self.gt_validation_labels = pd.read_csv("validation_labels.csv", delimiter='\t')
-        self.gt_test_labels = pd.read_csv("test_labels.csv", delimiter='\t')
+        self.gt_train_labels = pd.read_csv("training_labels.csv", delimiter='\t', converters={'labels': pd.eval})
+        self.gt_validation_labels = pd.read_csv("validation_labels.csv", delimiter='\t', converters={'labels': pd.eval})
+        self.gt_test_labels = pd.read_csv("test_labels.csv", delimiter='\t', converters={'labels': pd.eval})
         self.BCELoss = nn.BCELoss()
+        self.spacy = spacy.load('en_core_web_sm')
+        self.batch_size = batch_size
+        self.cls_token_id = cls_token_id
 
     def get_global_attention_mask(self, input_ids, cls_token_indexes):
-        attention_mask = torch.zeros(input_ids.shape, dtype=torch.long,
-                                     device=input_ids.device)  # initialize to local attention
 
-        attention_mask[:, cls_token_indexes] = 1
+        attention_mask = torch.zeros(input_ids.shape, dtype=torch.long,
+                                     device=input_ids.device)# initialize to local attention
+        for i in range(self.batch_size):
+            attention_mask[i, cls_token_indexes[i]] = 1
         return attention_mask
+
+    def get_list_of_sentences(self, text):
+        doc = self.spacy(text)
+        lst = []
+        for sent in doc.sents:
+            lst.append(sent.text)
+        return lst
 
     def pad_input(self, input, pad_dim=400):
         current_dim = input.shape[1]
@@ -114,18 +128,26 @@ class LongDocumentSummarizerModel(LightningModule):
         return loss
 
     def get_cls_token_indexes(self, input_ids, cls_token_id):
-        np_input_ids = input_ids.flatten().cpu().detach().numpy()
-        indexes = []
-        for idx, token in enumerate(np_input_ids):
-            if token == cls_token_id:
-                indexes.append(idx)
-        return np.array(indexes)
+        batch_of_indexes = []
+        for i in range(self.batch_size):
+            np_input_ids = input_ids[i, :].flatten().cpu().detach().numpy()
+            indexes = []
+            for idx, token in enumerate(np_input_ids):
+                if token == cls_token_id:
+                    indexes.append(idx)
+            batch_of_indexes.append(np.array(indexes))
+        return np.array(batch_of_indexes)
 
     def calculate_F1(self, prediction, gt):
         return f1_score(gt, prediction)
 
 
-    def produce_text_summary(self, predictions, sentence_list):
+    def produce_text_summary(self, predictions, text):
+        doc = self.spacy(text)
+        sentence_list = []
+        for sent in doc.sents:
+            sentence_list.append(sent.text)
+
         rounded = np.where(predictions > 0.6, 1., 0.)# threshold
         summary_sentences = []
         for idx, i in enumerate(rounded):
@@ -166,25 +188,22 @@ class LongDocumentSummarizerModel(LightningModule):
             df = self.gt_test_labels
         else:
             df = self.gt_train_labels
-        row = df[df["id"] == document_id[0]]
-        gt = row['labels']
-        gt = gt.iloc[0].lstrip('[').rstrip(']')
-        gt = np.fromstring(gt, dtype=float, sep=',')
+
+        rows = df.loc[df['id'].isin(document_id)]
+        gt = rows['labels'].tolist()
         return gt
 
 
     def training_step(self, batch, batch_idx):
         input_ids = batch["document_input_ids"]
         labels = batch["summary_input_ids"]
-        cls_token_id = batch["cls_token_id"]
         text_sentence_length = batch["text_sentence_length"]
         document_id = batch["document_id"]
-        cls_token_indexes = self.get_cls_token_indexes(input_ids, cls_token_id)
+        cls_token_indexes = self.get_cls_token_indexes(input_ids, self.cls_token_id)
+        ground_truth = self.get_ground_truth_labels(document_id, source="train")
         outputs = self.forward(input_ids=input_ids,
                                labels=labels,
                                cls_token_indexes=cls_token_indexes)
-
-        ground_truth = self.get_ground_truth_labels(document_id, source="train")
         predictions = self.produce_summary_labels(outputs, text_sentence_length)
 
         if len(predictions) != len(ground_truth):
@@ -198,21 +217,20 @@ class LongDocumentSummarizerModel(LightningModule):
 
 
     def validation_step(self, batch, batch_idx):
+        text = batch['text']
         input_ids = batch["document_input_ids"]
         labels = batch["summary_input_ids"]
-        cls_token_id = batch["cls_token_id"]
         text_sentence_length = batch["text_sentence_length"]
-        sentence_list = batch["text_list_sentences"]
         document_id = batch["document_id"]
         gt_summary = batch["summary"]
-        cls_token_indexes = self.get_cls_token_indexes(input_ids, cls_token_id)
+        cls_token_indexes = self.get_cls_token_indexes(input_ids, self.cls_token_id)
+        ground_truth = self.get_ground_truth_labels(document_id, source="validation")
         outputs = self.forward(input_ids=input_ids,
                                labels=labels,
                                cls_token_indexes=cls_token_indexes)
 
-        ground_truth = self.get_ground_truth_labels(document_id, source="validation")
         predictions = self.produce_summary_labels(outputs, text_sentence_length)
-        produced_summary, rounded_predictions = self.produce_text_summary(predictions, sentence_list)
+        produced_summary, rounded_predictions = self.produce_text_summary(predictions, text)
 
         if len(predictions) != len(ground_truth):
             min_length = min(len(predictions), len(ground_truth))
@@ -242,10 +260,9 @@ class LongDocumentSummarizerModel(LightningModule):
     def test_step(self, batch, batch_idx):
         input_ids = batch["document_input_ids"]
         labels = batch["summary_input_ids"]
-        cls_token_id = batch["cls_token_id"]
         text_sentence_length = batch["text_sentence_length"]
         document_id = batch["document_id"]
-        cls_token_indexes = self.get_cls_token_indexes(input_ids, cls_token_id)
+        cls_token_indexes = self.get_cls_token_indexes(input_ids, self.cls_token_id)
         outputs = self.forward(input_ids=input_ids,
                                labels=labels,
                                cls_token_indexes=cls_token_indexes)

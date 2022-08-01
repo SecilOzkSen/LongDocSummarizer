@@ -74,8 +74,6 @@ class CNNDailyMailDataset(Dataset):
             text=text,
             summary=summary,
             text_sentence_length=sentence_length,
-            text_list_sentences=sentence_list,
-            cls_token_id=self.tokenizer.cls_token_id,
             summary_input_ids=summary_input_ids.flatten(),
             document_input_ids=document_input_ids.flatten(),
             document_id=id
@@ -88,7 +86,7 @@ class SummaryWithKeywordDataModule(LightningDataModule):
                  validation_df : pd.DataFrame,
                  test_df : pd.DataFrame,
                  tokenizer: LongformerTokenizer,
-                 batch_size: int = 1,
+                 batch_size: int = 64,
                  text_max_token_limit: int = 8192,
                  ):
         super().__init__()
