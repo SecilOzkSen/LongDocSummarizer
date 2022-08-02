@@ -132,6 +132,7 @@ class LongDocumentSummarizerModel(LightningModule):
     #    padded_output = self.pad_input(cls_token_values)
 
         positionally_encoded = self.positional_encoding(cls_token_values)
+        print(positionally_encoded)
 
         document_embedder_output = self.document_embedder(positionally_encoded)
 
