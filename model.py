@@ -96,7 +96,7 @@ class LongDocumentSummarizerModel(LightningModule):
         return lst
 
     def pad_input(self, input, pad_dim=400):
-        pads = np.empty(self.batch_size, pad_dim, input.shape[-1])
+        pads = np.empty((self.batch_size, pad_dim, input.shape[-1]), dtype=object)
         for i in range(self.batch_size):
             inp = input[i]
             current_dim = inp.shape[1]
