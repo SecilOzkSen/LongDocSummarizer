@@ -96,7 +96,8 @@ class LongDocumentSummarizerModel(LightningModule):
         return lst
 
     def pad_input(self, input, pad_dim=400):
-        current_dim = input.size[1]
+        print(input.shape)
+        current_dim = input.shape[1]
         return F.pad(input, pad=(0, 0, 0, pad_dim-current_dim, 0, 0), mode='constant', value=0)
 
     def get_cls_token_values_as_batch(self, last_hidden_state, cls_token_indexes):
