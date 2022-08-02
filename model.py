@@ -119,7 +119,7 @@ class LongDocumentSummarizerModel(LightningModule):
             print(cls_token_value.shape)
             current_dim = cls_token_value.shape[0]
             print(current_dim)
-            padded = F.pad(cls_token_value, pad=(0, pad_dim - current_dim, 0, 0), mode='constant', value=0)
+            padded = F.pad(cls_token_value, pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0)
             print(padded.shape)
             cls_token_values[i, :, :] = padded
         return cls_token_values
