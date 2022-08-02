@@ -106,15 +106,17 @@ class LongDocumentSummarizerModel(LightningModule):
         print(pads.shape)
         return pads
 
-    def get_cls_token_values_as_batch(self, last_hidden_state, cls_token_indexes):
-        cls_token_values = []
+    def get_cls_token_values_as_batch(self, last_hidden_state, cls_token_indexes, pad_dim=400):
+        cls_token_values = np.empty(shape=(self.batch_size, pad_dim, last_hidden_state[-1]))
         for i in range(self.batch_size):
             cls_token_index = cls_token_indexes[i]
             cls_token_index = torch.IntTensor(cls_token_index).to(self.device)
       #      print(cls_token_index)
             cls_token_value = torch.index_select(last_hidden_state[i], 0, cls_token_index)
-            cls_token_values.append(cls_token_value)
-        return np.array(cls_token_values, dtype=object)
+            current_dim = cls_token_value.shape[0]
+            padded = F.pad(cls_token_value, pad=(0, pad_dim - current_dim, 0, 0), mode='constant', value=0)
+            cls_token_values[i, : , :] = padded
+        return cls_token_values
 
     def forward(self, input_ids, labels, cls_token_indexes):
         global_attention_mask = self.get_global_attention_mask(input_ids, cls_token_indexes)
@@ -128,11 +130,9 @@ class LongDocumentSummarizerModel(LightningModule):
 
         cls_token_values = self.get_cls_token_values_as_batch(last_hidden_state, cls_token_indexes)
 
-        print(cls_token_values.shape)
+    #    padded_output = self.pad_input(cls_token_values)
 
-        padded_output = self.pad_input(cls_token_values)
-
-        positionally_encoded = self.positional_encoding(padded_output)
+        positionally_encoded = self.positional_encoding(cls_token_values)
 
         document_embedder_output = self.document_embedder(positionally_encoded)
 
