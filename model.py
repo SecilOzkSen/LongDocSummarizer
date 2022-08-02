@@ -45,8 +45,9 @@ class PositionalEncoding(nn.Module):
             emb = emb + self.pe[:, step][:, None, :]
         else:
             emb = emb + self.pe[:, :emb.size(1)]
+        emb = emb.to(dtype=torch.double)
         emb = self.dropout(emb)
-        return emb.to(dtype=torch.double)
+        return emb
 
     def get_emb(self, emb):
         return self.pe[:, :emb.size(1)]
