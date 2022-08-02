@@ -44,7 +44,7 @@ class PositionalEncoding(nn.Module):
         if (step):
             emb = emb + self.pe[:, step][:, None, :]
         else:
-            emb = emb + self.pe[:, :emb.size(1)]
+            emb = emb + self.pe[:, :emb.shape[1]]
         emb = self.dropout(emb)
         return emb
 
