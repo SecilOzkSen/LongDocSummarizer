@@ -114,7 +114,7 @@ class LongDocumentSummarizerModel(LightningModule):
             current_dim = cls_token_value.shape[0]
             padded = F.pad(cls_token_value, pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0)
             cls_token_values[i, :, :] = padded
-        return cls_token_values
+        return cls_token_values.to(dtype=torch.double)
 
     def forward(self, input_ids, labels, cls_token_indexes):
         global_attention_mask = self.get_global_attention_mask(input_ids, cls_token_indexes)
