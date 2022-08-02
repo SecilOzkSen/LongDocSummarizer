@@ -114,7 +114,7 @@ class LongDocumentSummarizerModel(LightningModule):
       #      print(cls_token_index)
             cls_token_value = torch.index_select(last_hidden_state[i], 0, cls_token_index)
             cls_token_values.append(cls_token_value)
-        return np.array(cls_token_values)
+        return np.array(cls_token_values, dtype=object)
 
     def forward(self, input_ids, labels, cls_token_indexes):
         global_attention_mask = self.get_global_attention_mask(input_ids, cls_token_indexes)
@@ -155,7 +155,7 @@ class LongDocumentSummarizerModel(LightningModule):
                 if token == cls_token_id:
                     indexes.append(idx)
             batch_of_indexes.append(np.array(indexes))
-        return np.array(batch_of_indexes)
+        return np.array(batch_of_indexes, dtype=object)
 
     def calculate_F1(self, prediction, gt):
         return f1_score(gt, prediction)
