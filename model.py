@@ -45,8 +45,8 @@ class PositionalEncoding(nn.Module):
             emb = emb + self.pe[:, step][:, None, :]
         else:
             emb = emb + self.pe[:, :emb.size(1)]
-        emb = emb.to(dtype=torch.double)
         emb = self.dropout(emb)
+        emb = emb.to(dtype=torch.double)
         return emb
 
     def get_emb(self, emb):
@@ -130,8 +130,10 @@ class LongDocumentSummarizerModel(LightningModule):
         cls_token_values = self.get_cls_token_values_as_batch(last_hidden_state, cls_token_indexes)
 
     #    padded_output = self.pad_input(cls_token_values)
+        print(cls_token_values)
 
         positionally_encoded = self.positional_encoding(cls_token_values)
+        print(cls_token_values.shape)
         print(positionally_encoded)
 
         document_embedder_output = self.document_embedder(positionally_encoded)
