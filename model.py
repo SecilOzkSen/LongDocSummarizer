@@ -44,7 +44,7 @@ class PositionalEncoding(nn.Module):
         if (step):
             emb = emb + self.pe[:, step][:, None, :]
         else:
-            emb = emb + self.pe[:, :emb.shape[1]]
+            emb = emb + self.pe[:, :emb.size(1)]
         emb = self.dropout(emb)
         return emb
 
@@ -114,7 +114,7 @@ class LongDocumentSummarizerModel(LightningModule):
             current_dim = cls_token_value.shape[0]
             padded = F.pad(cls_token_value, pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0)
             cls_token_values[i, :, :] = padded
-        return cls_token_values
+        return torch.from_numpy(cls_token_values)
 
     def forward(self, input_ids, labels, cls_token_indexes):
         global_attention_mask = self.get_global_attention_mask(input_ids, cls_token_indexes)
