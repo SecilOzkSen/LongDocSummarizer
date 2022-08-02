@@ -105,7 +105,7 @@ class LongDocumentSummarizerModel(LightningModule):
         return pads
 
     def get_cls_token_values_as_batch(self, last_hidden_state, cls_token_indexes, pad_dim=400):
-        cls_token_values = np.empty(shape=(self.batch_size, pad_dim, last_hidden_state.shape[-1]))
+        cls_token_values = torch.empty(shape=(self.batch_size, pad_dim, last_hidden_state.shape[-1]), dtype=torch.double)
         for i in range(self.batch_size):
             cls_token_index = cls_token_indexes[i]
             cls_token_index = torch.IntTensor(cls_token_index).to(self.device)
@@ -114,7 +114,7 @@ class LongDocumentSummarizerModel(LightningModule):
             current_dim = cls_token_value.shape[0]
             padded = F.pad(cls_token_value, pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0)
             cls_token_values[i, :, :] = padded
-        return torch.from_numpy(cls_token_values)
+        return cls_token_values
 
     def forward(self, input_ids, labels, cls_token_indexes):
         global_attention_mask = self.get_global_attention_mask(input_ids, cls_token_indexes)
