@@ -96,10 +96,10 @@ class LongDocumentSummarizerModel(LightningModule):
         return lst
 
     def pad_input(self, input, pad_dim=400):
-        print(input.shape)
         pads = np.empty((self.batch_size, pad_dim, input.shape[-1]), dtype=object)
         for i in range(self.batch_size):
             inp = input[i]
+            print(inp.shape)
             current_dim = inp.shape[1]
             padded = F.pad(inp, pad=(0, pad_dim-current_dim, 0, 0), mode='constant', value=0)
             pads[i, :, :] = padded
@@ -127,6 +127,8 @@ class LongDocumentSummarizerModel(LightningModule):
    #     cls_token_values = torch.index_select(last_hidden_state, 1, cls_token_indexes)
 
         cls_token_values = self.get_cls_token_values_as_batch(last_hidden_state, cls_token_indexes)
+
+        print(cls_token_values.shape)
 
         padded_output = self.pad_input(cls_token_values)
 
