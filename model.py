@@ -111,7 +111,7 @@ class LongDocumentSummarizerModel(LightningModule):
             cls_token_index = torch.IntTensor(cls_token_index).to(self.device)
             cls_token_value = torch.index_select(last_hidden_state[i], 0, cls_token_index.flatten())
             current_dim = cls_token_value.shape[0]
-            padded = F.pad(cls_token_value, pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0.)
+            padded = F.pad(torch.DoubleTensor(cls_token_value), pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0.)
             print(padded.type())
             cls_token_values[i] = padded
         return cls_token_values
@@ -131,7 +131,6 @@ class LongDocumentSummarizerModel(LightningModule):
     #    padded_output = self.pad_input(cls_token_values)
         positionally_encoded = self.positional_encoding(cls_token_values)
         print("positionally encoded")
-        print(cls_token_values.shape)
         print(positionally_encoded)
 
         document_embedder_output = self.document_embedder(positionally_encoded)
