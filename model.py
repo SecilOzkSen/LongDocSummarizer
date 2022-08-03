@@ -114,7 +114,10 @@ class LongDocumentSummarizerModel(LightningModule):
             current_dim = cls_token_value.shape[0]
             padded = F.pad(cls_token_value.float(), pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0)
             cls_token_values.append(padded)
+        print("cls_token_values")
+        print(cls_token_values)
         result = torch.stack(cls_token_values, dim=0)
+        print(result)
         return result.float()
 
 
