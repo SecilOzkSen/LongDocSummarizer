@@ -29,12 +29,12 @@ class PositionalEncoding(nn.Module):
     def __init__(self, dropout, dim, max_len=400):
         pe = torch.zeros(max_len, dim, dtype=torch.double)
         position = torch.arange(0, max_len).unsqueeze(1)
-        div_term = torch.exp((torch.arange(0, dim, 2, dtype=torch.float) *
+        div_term = torch.exp((torch.arange(0, dim, 2, dtype=torch.double) *
                               -(math.log(10000.0) / dim)))
-        pe[:, 0::2] = torch.sin(position.double() * div_term)
-        pe[:, 1::2] = torch.cos(position.double() * div_term)
+        pe[:, 0::2] = torch.sin(position.double() * div_term.to(dtype=torch.double))
+        pe[:, 1::2] = torch.cos(position.double() * div_term.to(dtype=torch.double))
         pe = pe.unsqueeze(0)
-        pe = torch.DoubleTensor(pe)
+        pe = pe.to(dtype=torch.double)
         super(PositionalEncoding, self).__init__()
         self.register_buffer('pe', pe)
         self.dropout = nn.Dropout(p=dropout)
@@ -69,7 +69,7 @@ class LongDocumentSummarizerModel(LightningModule):
         super().__init__()
         self.sentence_encoder_model = model
         self.tokenizer = tokenizer
-        self.document_embedder = nn.TransformerEncoderLayer(d_model=768, nhead=8, batch_first=True, dtype=torch.float)
+        self.document_embedder = nn.TransformerEncoderLayer(d_model=768, nhead=8, batch_first=True)
         self.positional_encoding = PositionalEncoding(dropout=0.1, dim=768)
         self.classifier = Classifier(hidden_size=768, out_size=1)
         self.top_k = top_k
@@ -112,10 +112,10 @@ class LongDocumentSummarizerModel(LightningModule):
             cls_token_index = torch.IntTensor(cls_token_index).to(self.device)
             cls_token_value = torch.index_select(last_hidden_state[i], 0, cls_token_index.flatten())
             current_dim = cls_token_value.shape[0]
-            padded = F.pad(cls_token_value.float(), pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0.)
+            padded = F.pad(cls_token_value.float(), pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0)
             cls_token_values.append(padded)
         result = torch.stack(cls_token_values, dim=0)
-        return result.to(dtype=torch.double)
+        return result.float()
 
 
     def get_cls_token_values_as_batch(self, last_hidden_state, cls_token_indexes, pad_dim=400):
@@ -141,13 +141,12 @@ class LongDocumentSummarizerModel(LightningModule):
    #     cls_token_values = torch.index_select(last_hidden_state, 1, cls_token_indexes)
 
         cls_token_values = self.get_cls_token_values_as_batch_2(last_hidden_state, cls_token_indexes)
-
     #    padded_output = self.pad_input(cls_token_values)
         positionally_encoded = self.positional_encoding(cls_token_values)
 
-        document_embedder_output = self.document_embedder(positionally_encoded.to(dtype=torch.double))
+        document_embedder_output = self.document_embedder(positionally_encoded.float())
 
-        results = self.classifier(document_embedder_output)
+        results = self.classifier(document_embedder_output.float())
 
         return results
 
