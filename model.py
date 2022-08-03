@@ -235,7 +235,7 @@ class LongDocumentSummarizerModel(LightningModule):
         np_gts = []
         for gt in gts:
             np_gts.append(np.array(gt, dtype=np.float))
-        length_list = [len(lst) for lst in gt]
+        length_list = [len(lst) for lst in gts]
         return np_gts, length_list
 
 
