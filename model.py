@@ -104,8 +104,21 @@ class LongDocumentSummarizerModel(LightningModule):
             pads[i, :, :] = padded
         return pads
 
+    def get_cls_token_values_as_batch_2(self, last_hidden_state, cls_token_indexes, pad_dim=400):
+        cls_token_values = np.zeros(shape=(self.batch_size, pad_dim, last_hidden_state.shape[-1]), dtype=np.float)
+        np_last_hidden_state = last_hidden_state.cpu().detach().numpy()
+        for i in range(self.batch_size):
+            cls_token_index = cls_token_indexes[i]
+            print(cls_token_index)
+            cls_token_value = np.take(np_last_hidden_state[i], cls_token_index.flatten(), axis=0)
+            current_dim = cls_token_value.shape[0]
+            padded = np.pad(cls_token_value, (0, 0, 0, pad_dim - current_dim), mode='constant')
+            print(padded)
+            cls_token_values[i] = padded
+        return torch.DoubleTensor(cls_token_values)
+
     def get_cls_token_values_as_batch(self, last_hidden_state, cls_token_indexes, pad_dim=400):
-        cls_token_values = torch.zeros(size=(self.batch_size, pad_dim, last_hidden_state.shape[-1]))
+        cls_token_values = np.zeros(shape=(self.batch_size, pad_dim, last_hidden_state.shape[-1]), dtype=np.float)
         for i in range(self.batch_size):
             cls_token_index = cls_token_indexes[i]
             cls_token_index = torch.IntTensor(cls_token_index).to(self.device)
@@ -126,12 +139,13 @@ class LongDocumentSummarizerModel(LightningModule):
    #     cls_token_indexes = torch.IntTensor(cls_token_indexes).to(self.device)
    #     cls_token_values = torch.index_select(last_hidden_state, 1, cls_token_indexes)
 
-        cls_token_values = self.get_cls_token_values_as_batch(last_hidden_state, cls_token_indexes)
+        cls_token_values = self.get_cls_token_values_as_batch_2(last_hidden_state, cls_token_indexes)
 
     #    padded_output = self.pad_input(cls_token_values)
         positionally_encoded = self.positional_encoding(cls_token_values)
         print("positionally encoded")
         print(positionally_encoded)
+        print()
 
         document_embedder_output = self.document_embedder(positionally_encoded.double())
 
