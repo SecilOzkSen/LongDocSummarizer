@@ -113,7 +113,8 @@ class LongDocumentSummarizerModel(LightningModule):
             cls_token_value = torch.index_select(last_hidden_state[i], 0, cls_token_index.flatten())
             current_dim = cls_token_value.shape[0]
             padded = F.pad(cls_token_value, pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0.)
-            cls_token_values[i, :, :] = padded
+            print(padded)
+            cls_token_values[i] = padded
         return cls_token_values
 
     def forward(self, input_ids, labels, cls_token_indexes):
@@ -129,9 +130,8 @@ class LongDocumentSummarizerModel(LightningModule):
         cls_token_values = self.get_cls_token_values_as_batch(last_hidden_state, cls_token_indexes)
 
     #    padded_output = self.pad_input(cls_token_values)
-        print(cls_token_values)
-
         positionally_encoded = self.positional_encoding(cls_token_values)
+        print("positionally encoded")
         print(cls_token_values.shape)
         print(positionally_encoded)
 
