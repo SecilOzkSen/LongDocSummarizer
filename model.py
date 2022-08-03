@@ -114,10 +114,7 @@ class LongDocumentSummarizerModel(LightningModule):
             current_dim = cls_token_value.shape[0]
             padded = F.pad(cls_token_value.float(), pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0)
             cls_token_values.append(padded)
-        print("cls_token_values")
-        print(cls_token_values)
         result = torch.stack(cls_token_values, dim=0)
-        print(result)
         return result.float()
 
 
@@ -129,7 +126,6 @@ class LongDocumentSummarizerModel(LightningModule):
             cls_token_value = torch.index_select(last_hidden_state[i], 0, cls_token_index.flatten())
             current_dim = cls_token_value.shape[0]
             padded = F.pad(cls_token_value.double(), pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0.)
-            print(padded.type())
             cls_token_values[i] = torch.DoubleTensor(padded)
         return cls_token_values
 
@@ -173,9 +169,6 @@ class LongDocumentSummarizerModel(LightningModule):
         return np.array(batch_of_indexes, dtype=object)
 
     def calculate_F1(self, prediction, gt):
-        print("prediction")
-        print(prediction)
-        print("ground truth")
         return f1_score(gt, prediction)
 
 
@@ -202,10 +195,6 @@ class LongDocumentSummarizerModel(LightningModule):
     def produce_summary_labels(self, results, text_sentence_length):
         results = results.cpu().detach().numpy()
         np_results = []
-        print("results:")
-        print(results)
-        print("text sentence length")
-        print(text_sentence_length)
         for i in range(self.batch_size):
             res = results[i]
             np_results.append(res[0:text_sentence_length[i]])
