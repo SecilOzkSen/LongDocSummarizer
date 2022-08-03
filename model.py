@@ -144,11 +144,8 @@ class LongDocumentSummarizerModel(LightningModule):
 
     #    padded_output = self.pad_input(cls_token_values)
         positionally_encoded = self.positional_encoding(cls_token_values)
-        print("positionally encoded")
-        print(positionally_encoded)
-        print()
 
-        document_embedder_output = self.document_embedder(positionally_encoded.double())
+        document_embedder_output = self.document_embedder(positionally_encoded.to(dtype=torch.double))
 
         results = self.classifier(document_embedder_output)
 
