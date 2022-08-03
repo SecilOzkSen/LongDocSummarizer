@@ -173,7 +173,7 @@ class LongDocumentSummarizerModel(LightningModule):
         print(prediction)
         print("gt")
         print(gt)
-        return f1_score(gt, prediction)
+        return f1_score(np.asarray(gt, dtype=np.float), np.asarray(gt, dtype=np.float))
 
 
     def produce_text_summary(self, predictions, text):
@@ -184,7 +184,7 @@ class LongDocumentSummarizerModel(LightningModule):
             sentence_list = []
             for sent in doc.sents:
                 sentence_list.append(sent.text)
-            rounded = np.where(predictions[i] > 0.6, 1., 0.)
+            rounded = np.where(predictions[i] > 0.65, 1., 0.)
             summary_sentences = []
             for idx, sentence in enumerate(sentence_list):
                 if rounded[idx] == 1:
