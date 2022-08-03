@@ -186,8 +186,8 @@ class LongDocumentSummarizerModel(LightningModule):
                 sentence_list.append(sent.text)
             rounded = np.where(predictions[i] > 0.6, 1., 0.)
             summary_sentences = []
-            for idx, i in enumerate(rounded):
-                if i == 1:
+            for idx, sentence in enumerate(sentence_list):
+                if rounded[idx] == 1:
                     summary_sentences.append(sentence_list[idx])
             summary = ' '.join(summary_sentences).strip()
             batch_of_gt.append(rounded)
