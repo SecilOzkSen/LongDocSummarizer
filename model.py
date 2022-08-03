@@ -176,30 +176,35 @@ class LongDocumentSummarizerModel(LightningModule):
         print("prediction")
         print(prediction)
         print("ground truth")
-        print(gt)
         return f1_score(gt, prediction)
 
 
     def produce_text_summary(self, predictions, text):
-        doc = self.spacy(text[0])
-        sentence_list = []
-        for sent in doc.sents:
-            sentence_list.append(sent.text)
-
-        rounded = np.where(predictions > 0.6, 1., 0.)# threshold
-        summary_sentences = []
-        for idx, i in enumerate(rounded):
-            if i == 1:
-                summary_sentences.append(sentence_list[idx][0])
-        summary = ' '.join(summary_sentences).strip()
-        return summary, rounded
+        batch_of_summaries = []
+        batch_of_gt = []
+        for i in range(self.batch_size):
+            doc = self.spacy(text[i])
+            sentence_list = []
+            for sent in doc.sents:
+                sentence_list.append(sent.text)
+            rounded = np.where(predictions[i] > 0.6, 1., 0.)
+            summary_sentences = []
+            for idx, i in enumerate(rounded):
+                if i == 1:
+                    summary_sentences.append(sentence_list[idx][0])
+            summary = ' '.join(summary_sentences).strip()
+            batch_of_gt.append(rounded)
+            batch_of_summaries.append(summary)
+        return batch_of_summaries, batch_of_gt
 
 
 
     def produce_summary_labels(self, results, text_sentence_length):
         results = results.flatten().cpu().detach().numpy()
-        results = results[0:text_sentence_length[0]]
-        return results
+        np_results = []
+        for i in range(self.batch_size):
+            np_results.append(results[i][0:text_sentence_length[i]])
+        return np_results
 
 
     def produce_summary_input_ids(self, results, text_sentence_length, sentence_list, top_k=4):
@@ -229,25 +234,25 @@ class LongDocumentSummarizerModel(LightningModule):
 
         rows = df.loc[df['id'].isin(document_id)]
         gt = rows['labels'].tolist()
-        return gt
+        length_list = [len(lst) for lst in gt]
+        return gt, length_list
 
 
     def training_step(self, batch, batch_idx):
         input_ids = batch["document_input_ids"]
         labels = batch["summary_input_ids"]
-        text_sentence_length = batch["text_sentence_length"]
         document_id = batch["document_id"]
         cls_token_indexes = self.get_cls_token_indexes(input_ids, self.cls_token_id)
-        ground_truth = self.get_ground_truth_labels(document_id, source="train")
+        ground_truth, lengths = self.get_ground_truth_labels(document_id, source="train")
         outputs = self.forward(input_ids=input_ids,
                                labels=labels,
                                cls_token_indexes=cls_token_indexes)
-        predictions = self.produce_summary_labels(outputs, text_sentence_length)
+        predictions = self.produce_summary_labels(outputs, lengths)
 
-        if len(predictions) != len(ground_truth):
-            min_length = min(len(predictions), len(ground_truth))
-            ground_truth = ground_truth[0:min_length]
-            predictions = predictions[0:min_length]
+   #     if len(predictions) != len(ground_truth):
+   #         min_length = min(len(predictions), len(ground_truth))
+   #         ground_truth = ground_truth[0:min_length]
+   #         predictions = predictions[0:min_length]
 
         loss = self.loss_calculation(predictions, ground_truth)
         self.log("train_loss", loss, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
@@ -258,23 +263,22 @@ class LongDocumentSummarizerModel(LightningModule):
         text = batch['text']
         input_ids = batch["document_input_ids"]
         labels = batch["summary_input_ids"]
-        text_sentence_length = batch["text_sentence_length"]
         document_id = batch["document_id"]
         gt_summary = batch["summary"]
         cls_token_indexes = self.get_cls_token_indexes(input_ids, self.cls_token_id)
-        ground_truth = self.get_ground_truth_labels(document_id, source="validation")
+        ground_truth, lengths = self.get_ground_truth_labels(document_id, source="validation")
         outputs = self.forward(input_ids=input_ids,
                                labels=labels,
                                cls_token_indexes=cls_token_indexes)
 
-        predictions = self.produce_summary_labels(outputs, text_sentence_length)
+        predictions = self.produce_summary_labels(outputs, lengths)
         produced_summary, rounded_predictions = self.produce_text_summary(predictions, text)
 
-        if len(predictions) != len(ground_truth):
-            min_length = min(len(predictions), len(ground_truth))
-            rounded_predictions = rounded_predictions[0:min_length]
-            ground_truth = ground_truth[0:min_length]
-            predictions = predictions[0:min_length]
+   #     if len(predictions) != len(ground_truth):
+   #         min_length = min(len(predictions), len(ground_truth))
+   #         rounded_predictions = rounded_predictions[0:min_length]
+   #         ground_truth = ground_truth[0:min_length]
+   #         predictions = predictions[0:min_length]
 
         f1 = self.calculate_F1(rounded_predictions, ground_truth)
 
@@ -298,15 +302,14 @@ class LongDocumentSummarizerModel(LightningModule):
     def test_step(self, batch, batch_idx):
         input_ids = batch["document_input_ids"]
         labels = batch["summary_input_ids"]
-        text_sentence_length = batch["text_sentence_length"]
         document_id = batch["document_id"]
         cls_token_indexes = self.get_cls_token_indexes(input_ids, self.cls_token_id)
         outputs = self.forward(input_ids=input_ids,
                                labels=labels,
                                cls_token_indexes=cls_token_indexes)
 
-        ground_truth = self.get_ground_truth_labels(document_id, source="test")
-        predictions = self.produce_summary_labels(outputs, text_sentence_length)
+        ground_truth, lengths = self.get_ground_truth_labels(document_id, source="test")
+        predictions = self.produce_summary_labels(outputs, lengths)
 
         if len(predictions) != len(ground_truth):
             min_length = min(len(predictions), len(ground_truth))
