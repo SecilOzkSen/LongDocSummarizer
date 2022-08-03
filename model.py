@@ -191,7 +191,7 @@ class LongDocumentSummarizerModel(LightningModule):
             summary_sentences = []
             for idx, i in enumerate(rounded):
                 if i == 1:
-                    summary_sentences.append(sentence_list[idx][0])
+                    summary_sentences.append(sentence_list[idx])
             summary = ' '.join(summary_sentences).strip()
             batch_of_gt.append(rounded)
             batch_of_summaries.append(summary)
