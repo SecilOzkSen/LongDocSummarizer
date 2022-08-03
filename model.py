@@ -133,7 +133,7 @@ class LongDocumentSummarizerModel(LightningModule):
         print("positionally encoded")
         print(positionally_encoded)
 
-        document_embedder_output = self.document_embedder(positionally_encoded)
+        document_embedder_output = self.document_embedder(positionally_encoded.double())
 
         results = self.classifier(document_embedder_output)
 
