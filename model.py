@@ -105,20 +105,21 @@ class LongDocumentSummarizerModel(LightningModule):
         return pads
 
     def get_cls_token_values_as_batch_2(self, last_hidden_state, cls_token_indexes, pad_dim=400):
-        cls_token_values = np.zeros(shape=(self.batch_size, pad_dim, last_hidden_state.shape[-1]), dtype=np.float)
-        np_last_hidden_state = last_hidden_state.cpu().detach().numpy()
+        cls_token_values = []
         for i in range(self.batch_size):
             cls_token_index = cls_token_indexes[i]
-            print(cls_token_index)
-            cls_token_value = np.take(np_last_hidden_state[i], cls_token_index.flatten(), axis=0)
+            cls_token_index = torch.IntTensor(cls_token_index).to(self.device)
+            cls_token_value = torch.index_select(last_hidden_state[i], 0, cls_token_index.flatten())
             current_dim = cls_token_value.shape[0]
-            padded = np.pad(cls_token_value, (0, 0, 0, pad_dim - current_dim), mode='constant')
-            print(padded)
-            cls_token_values[i] = padded
-        return torch.DoubleTensor(cls_token_values)
+            padded = F.pad(cls_token_value.double(), pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0.)
+            cls_token_values.append(padded)
+        result = torch.stack(cls_token_values, dim=0)
+        print(result)
+        return result
+
 
     def get_cls_token_values_as_batch(self, last_hidden_state, cls_token_indexes, pad_dim=400):
-        cls_token_values = np.zeros(shape=(self.batch_size, pad_dim, last_hidden_state.shape[-1]), dtype=np.float)
+        cls_token_values = torch.zeros(size=(self.batch_size, pad_dim, last_hidden_state.shape[-1]), dtype=torch.double)
         for i in range(self.batch_size):
             cls_token_index = cls_token_indexes[i]
             cls_token_index = torch.IntTensor(cls_token_index).to(self.device)
