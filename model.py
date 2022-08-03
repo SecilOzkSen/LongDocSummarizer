@@ -177,7 +177,7 @@ class LongDocumentSummarizerModel(LightningModule):
 
 
     def produce_text_summary(self, predictions, text):
-        doc = self.spacy(text)
+        doc = self.spacy(text[0])
         sentence_list = []
         for sent in doc.sents:
             sentence_list.append(sent.text)
