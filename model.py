@@ -114,7 +114,9 @@ class LongDocumentSummarizerModel(LightningModule):
             padded = F.pad(cls_token_value.double(), pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0.)
             cls_token_values.append(padded)
         result = torch.stack(cls_token_values, dim=0)
+        result = torch.DoubleTensor(result)
         print(result)
+        print(result.type())
         return result
 
 
