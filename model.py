@@ -27,13 +27,14 @@ class Classifier(nn.Module):
 class PositionalEncoding(nn.Module):
 
     def __init__(self, dropout, dim, max_len=400):
-        pe = torch.zeros(max_len, dim)
+        pe = torch.zeros(max_len, dim, dtype=torch.double)
         position = torch.arange(0, max_len).unsqueeze(1)
         div_term = torch.exp((torch.arange(0, dim, 2, dtype=torch.float) *
                               -(math.log(10000.0) / dim)))
-        pe[:, 0::2] = torch.sin(position.float() * div_term)
-        pe[:, 1::2] = torch.cos(position.float() * div_term)
+        pe[:, 0::2] = torch.sin(position.double() * div_term)
+        pe[:, 1::2] = torch.cos(position.double() * div_term)
         pe = pe.unsqueeze(0)
+        pe = torch.DoubleTensor(pe)
         super(PositionalEncoding, self).__init__()
         self.register_buffer('pe', pe)
         self.dropout = nn.Dropout(p=dropout)
@@ -46,7 +47,7 @@ class PositionalEncoding(nn.Module):
         else:
             emb = emb + self.pe[:, :emb.size(1)]
         emb = self.dropout(emb)
-        return emb
+        return torch.DoubleTensor(emb)
 
     def get_emb(self, emb):
         return self.pe[:, :emb.size(1)]
@@ -114,9 +115,7 @@ class LongDocumentSummarizerModel(LightningModule):
             padded = F.pad(cls_token_value.float(), pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0.)
             cls_token_values.append(padded)
         result = torch.stack(cls_token_values, dim=0)
-        result = torch.FloatTensor(result)
-        print(result)
-        print(result.type())
+        result = torch.DoubleTensor(result)
         return result
 
 
