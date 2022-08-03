@@ -231,7 +231,7 @@ class LongDocumentSummarizerModel(LightningModule):
             df = self.gt_train_labels
 
         rows = df.loc[df['id'].isin(document_id)]
-        gt = rows['labels'].tolist()
+        gt = rows['labels'].to_numpy()
         length_list = [len(lst) for lst in gt]
         return gt, length_list
 
