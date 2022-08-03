@@ -173,6 +173,10 @@ class LongDocumentSummarizerModel(LightningModule):
         return np.array(batch_of_indexes, dtype=object)
 
     def calculate_F1(self, prediction, gt):
+        print("prediction")
+        print(prediction)
+        print("ground truth")
+        print(gt)
         return f1_score(gt, prediction)
 
 
