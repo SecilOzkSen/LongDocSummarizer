@@ -68,7 +68,7 @@ class LongDocumentSummarizerModel(LightningModule):
         super().__init__()
         self.sentence_encoder_model = model
         self.tokenizer = tokenizer
-        self.document_embedder = nn.TransformerEncoderLayer(d_model=768, nhead=8, batch_first=True)
+        self.document_embedder = nn.TransformerEncoderLayer(d_model=768, nhead=8, batch_first=True, dtype=torch.float)
         self.positional_encoding = PositionalEncoding(dropout=0.1, dim=768)
         self.classifier = Classifier(hidden_size=768, out_size=1)
         self.top_k = top_k
