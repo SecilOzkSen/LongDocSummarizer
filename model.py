@@ -202,8 +202,13 @@ class LongDocumentSummarizerModel(LightningModule):
     def produce_summary_labels(self, results, text_sentence_length):
         results = results.flatten().cpu().detach().numpy()
         np_results = []
+        print("results:")
+        print(results)
+        print("text sentence length")
+        print(text_sentence_length)
         for i in range(self.batch_size):
-            np_results.append(results[i][0:text_sentence_length[i]])
+            res = results[i]
+            np_results.append(res[0:text_sentence_length[i]])
         return np_results
 
 
