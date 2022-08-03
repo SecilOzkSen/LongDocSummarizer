@@ -200,7 +200,7 @@ class LongDocumentSummarizerModel(LightningModule):
 
 
     def produce_summary_labels(self, results, text_sentence_length):
-        results = results.flatten().cpu().detach().numpy()
+        results = results.cpu().detach().numpy()
         np_results = []
         print("results:")
         print(results)
