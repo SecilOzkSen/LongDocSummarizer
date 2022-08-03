@@ -231,9 +231,12 @@ class LongDocumentSummarizerModel(LightningModule):
             df = self.gt_train_labels
 
         rows = df.loc[df['id'].isin(document_id)]
-        gt = rows['labels'].to_numpy()
+        gts = rows['labels'].tolist()
+        np_gts = []
+        for gt in gts:
+            np_gts.append(np.array(gt, dtype=np.float))
         length_list = [len(lst) for lst in gt]
-        return gt, length_list
+        return np_gts, length_list
 
 
     def training_step(self, batch, batch_idx):
