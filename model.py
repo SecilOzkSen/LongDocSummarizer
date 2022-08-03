@@ -111,10 +111,10 @@ class LongDocumentSummarizerModel(LightningModule):
             cls_token_index = torch.IntTensor(cls_token_index).to(self.device)
             cls_token_value = torch.index_select(last_hidden_state[i], 0, cls_token_index.flatten())
             current_dim = cls_token_value.shape[0]
-            padded = F.pad(cls_token_value.double(), pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0.)
+            padded = F.pad(cls_token_value.float(), pad=(0, 0, 0, pad_dim - current_dim), mode='constant', value=0.)
             cls_token_values.append(padded)
         result = torch.stack(cls_token_values, dim=0)
-        result = torch.DoubleTensor(result)
+        result = torch.FloatTensor(result)
         print(result)
         print(result.type())
         return result
