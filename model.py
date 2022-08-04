@@ -187,6 +187,7 @@ class LongDocumentSummarizerModel(LightningModule):
             for sent in doc.sents:
                 sentence_list.append(sent.text)
             rounded = np.where(predictions[i] > 0.65, 1, 0)
+            rounded = np.array(rounded, dtype=np.int)
             summary_sentences = []
             for idx, sentence in enumerate(sentence_list):
                 if rounded[idx] == 1:
@@ -236,7 +237,8 @@ class LongDocumentSummarizerModel(LightningModule):
         gts = rows['labels'].tolist()
         np_gts = []
         for gt in gts:
-            np_gts.append(np.array(gt, dtype=np.int))
+            np_gts.append(np.asarray(gt, dtype=np.int))
+        print(np_gts)
         length_list = [len(lst) for lst in gts]
         return np_gts, length_list
 
