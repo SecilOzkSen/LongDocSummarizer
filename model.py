@@ -2,7 +2,6 @@ from pytorch_lightning import LightningModule
 import torch
 from torch.optim import AdamW
 from torch import nn
-from rouge import Rouge
 import math
 import numpy as np
 import torch.nn.functional as F
@@ -11,7 +10,6 @@ from sklearn.metrics import f1_score
 import spacy
 from torchmetrics.text.rouge import ROUGEScore
 
-rouge_v2 = Rouge()
 
 class Classifier(nn.Module):
     def __init__(self, hidden_size, out_size):
