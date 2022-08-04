@@ -1,13 +1,10 @@
-import numpy as np
 import pandas as pd
 from pytorch_lightning import LightningDataModule
-import torch
 from torch.utils.data import DataLoader
 from typing import Optional
 import spacy
 from datasets import Dataset
 from transformers import LongformerTokenizer
-from sentence_transformers import SentenceTransformer
 
 
 class CNNDailyMailDataset(Dataset):
