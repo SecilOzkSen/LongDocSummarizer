@@ -195,6 +195,7 @@ class LongDocumentSummarizerModel(LightningModule):
             summary = ' '.join(summary_sentences).strip()
             batch_of_gt.append(rounded)
             batch_of_summaries.append(summary)
+        print(batch_of_gt)
         return batch_of_summaries, batch_of_gt
 
 
