@@ -172,6 +172,9 @@ class LongDocumentSummarizerModel(LightningModule):
         print("prediction")
         for i in prediction:
             print(i)
+        print("Ground Truth")
+        for i in gt:
+            print(i)
         return f1_score(gt, prediction)
 
 
@@ -189,7 +192,7 @@ class LongDocumentSummarizerModel(LightningModule):
                 if rounded[idx] == 1:
                     summary_sentences.append(sentence_list[idx])
             summary = ' '.join(summary_sentences).strip()
-            batch_of_gt.append(np.asarray(rounded, dtype=np.float))
+            batch_of_gt.append(rounded)
             batch_of_summaries.append(summary)
         return batch_of_summaries, batch_of_gt
 
@@ -200,7 +203,7 @@ class LongDocumentSummarizerModel(LightningModule):
         np_results = []
         for i in range(self.batch_size):
             res = results[i]
-            np_results.append(res[0:text_sentence_length[i]])
+            np_results.append(np.asarray(res[0:text_sentence_length[i]], dtype=np.float))
         return np_results
 
 
@@ -284,7 +287,7 @@ class LongDocumentSummarizerModel(LightningModule):
 
         loss = self.loss_calculation(predictions, ground_truth)
         self.log("val_loss", loss, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
-        self.log("val_f1", f1 , prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
+        self.log("val_f1", f1, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
 
         if produced_summary != '':
             scores = rouge_v2.get_scores(produced_summary, ' '.join(gt_summary).strip())
