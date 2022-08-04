@@ -41,7 +41,7 @@ logger = TensorBoardLogger("./logs",
                            )
 
 trainer = pl.Trainer(logger=logger,
-                     checkpoint_callback=checkpoint_callback,
+                     callbacks=checkpoint_callback,
                      max_epochs=N_EPOCHS,
                      progress_bar_refresh_rate=30,
                      )
