@@ -43,7 +43,6 @@ logger = TensorBoardLogger("./logs",
 trainer = pl.Trainer(logger=logger,
                      callbacks=checkpoint_callback,
                      max_epochs=N_EPOCHS,
-                     progress_bar_refresh_rate=30,
                      )
 if __name__ == "__main__":
     trainer.fit(model, data_module)
