@@ -9,6 +9,7 @@ import torch.nn.functional as F
 import pandas as pd
 from sklearn.metrics import f1_score
 import spacy
+from torchmetrics.text.rouge import ROUGEScore
 
 rouge_v2 = Rouge()
 
@@ -80,6 +81,7 @@ class LongDocumentSummarizerModel(LightningModule):
         self.spacy = spacy.load('en_core_web_sm')
         self.batch_size = batch_size
         self.cls_token_id = cls_token_id
+        self.rouge_score = ROUGEScore()
 
     def get_global_attention_mask(self, input_ids, cls_token_indexes):
 
@@ -285,15 +287,11 @@ class LongDocumentSummarizerModel(LightningModule):
         self.log("val_f1", f1, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
 
         if produced_summary != '':
-            scores = rouge_v2.get_scores(produced_summary, ' '.join(gt_summary).strip())
-            scores = scores[0]
-            rouge1 = scores['rouge-1']
-            rouge2 = scores['rouge-2']
-            rougeN = scores['rouge-l']
-
-            self.log("rouge_1", rouge1['f'], prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
-            self.log("rouge_2", rouge2['f'], prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
-            self.log("rouge_n", rougeN['f'], prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
+            scores = self.rouge_score(produced_summary, gt_summary)
+            print(scores)
+            self.log("rouge1_fmeasure", scores['rouge1_fmeasure'], prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
+            self.log("rouge2_fmeasure", scores['rouge2_fmeasure'], prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
+            self.log("rougeL_fmeasure", scores['rougeL_fmeasure'], prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
 
         return loss
 
