@@ -203,7 +203,7 @@ class LongDocumentSummarizerModel(LightningModule):
         np_results = []
         for i in range(self.batch_size):
             res = results[i]
-            np_results.append(np.asarray(res[0:text_sentence_length[i]], dtype=np.float))
+            np_results.append(np.asarray(res[0:text_sentence_length[i]], dtype=np.int))
         return np_results
 
 
@@ -236,7 +236,7 @@ class LongDocumentSummarizerModel(LightningModule):
         gts = rows['labels'].tolist()
         np_gts = []
         for gt in gts:
-            np_gts.append(np.array(gt, dtype=np.float))
+            np_gts.append(np.array(gt, dtype=np.int))
         length_list = [len(lst) for lst in gts]
         return np_gts, length_list
 
