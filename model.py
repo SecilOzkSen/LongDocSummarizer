@@ -87,6 +87,10 @@ class LongDocumentSummarizerModel(LightningModule):
 
         attention_mask = torch.zeros(input_ids.shape, dtype=torch.long,
                                      device=input_ids.device)# initialize to local attention
+        if self.batch_size == 1:
+            attention_mask[:, cls_token_indexes] = 1
+            return attention_mask
+
         for i in range(self.batch_size):
             attention_mask[i, cls_token_indexes[i]] = 1
         return attention_mask
