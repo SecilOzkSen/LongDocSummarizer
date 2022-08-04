@@ -2,11 +2,11 @@ import numpy as np
 from datasets import load_dataset
 #from keybert import KeyBERT
 #keybert = KeyBERT()
-from sentence_transformers import SentenceTransformer, util
+#from sentence_transformers import SentenceTransformer, util
 import spacy
 
-sentence_transformer_model = SentenceTransformer('all-MiniLM-L6-v2')
-
+#sentence_transformer_model = SentenceTransformer('all-MiniLM-L6-v2')
+'''
 nlp = spacy.load('en_core_web_sm')
 
 def compare_sentences_summaries(text, summary, threshold = 0.65):
@@ -36,6 +36,7 @@ def compare_sentences_summaries(text, summary, threshold = 0.65):
         idx = np.argmax(max_cosine_scores)
         labels[idx] = 1
     return labels.tolist()
+    '''
 
 def clean_dataset(dataset):
     def clean_article(txt: str):
@@ -51,6 +52,7 @@ def clean_dataset(dataset):
         return text
     dataset["article"] = dataset["article"].apply(lambda x: clean_article(x))
     return dataset
+
 
 '''def extract_keywords(dataset):
     def extract_keyword(doc):
