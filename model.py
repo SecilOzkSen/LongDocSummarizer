@@ -150,7 +150,6 @@ class LongDocumentSummarizerModel(LightningModule):
         return results
 
     def loss_calculation(self, predictions, ground_truth):
-        predictions = torch.from_numpy(predictions)
         predictions = predictions.to(dtype=torch.double)
         ground_truth = torch.from_numpy(ground_truth)
         ground_truth = ground_truth.to(dtype=torch.double)
