@@ -87,10 +87,6 @@ class LongDocumentSummarizerModel(LightningModule):
 
         attention_mask = torch.zeros(input_ids.shape, dtype=torch.long,
                                      device=input_ids.device)# initialize to local attention
-        if self.batch_size == 1:
-            attention_mask[:, cls_token_indexes] = 1
-            return attention_mask
-
         for i in range(self.batch_size):
             attention_mask[i, cls_token_indexes[i]] = 1
         return attention_mask
@@ -171,7 +167,7 @@ class LongDocumentSummarizerModel(LightningModule):
                 if token == cls_token_id:
                     indexes.append(idx)
             batch_of_indexes.append(np.array(indexes))
-        return np.array(batch_of_indexes, dtype=object)
+        return np.array(batch_of_indexes)
 
     def calculate_F1(self, prediction, gt):
         f1 = 0.
