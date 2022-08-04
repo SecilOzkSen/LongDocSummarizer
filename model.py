@@ -186,8 +186,9 @@ class LongDocumentSummarizerModel(LightningModule):
             sentence_list = []
             for sent in doc.sents:
                 sentence_list.append(sent.text)
-            rounded = np.where(predictions[i] > 0.65, 1, 0)
-            rounded = np.array(rounded, dtype=np.int)
+            rounded = np.where(predictions[i] > 0.65, 1., 0.)
+            print(rounded.dtype)
+            print(rounded)
             summary_sentences = []
             for idx, sentence in enumerate(sentence_list):
                 if rounded[idx] == 1:
@@ -238,7 +239,7 @@ class LongDocumentSummarizerModel(LightningModule):
         gts = rows['labels'].tolist()
         np_gts = []
         for gt in gts:
-            np_gts.append(np.asarray(gt, dtype=np.int))
+            np_gts.append(np.asarray(gt, dtype=np.float))
         print(np_gts)
         length_list = [len(lst) for lst in gts]
         return np_gts, length_list
@@ -317,10 +318,10 @@ class LongDocumentSummarizerModel(LightningModule):
         ground_truth, lengths = self.get_ground_truth_labels(document_id, source="test")
         predictions = self.produce_summary_labels(outputs, lengths)
 
-        if len(predictions) != len(ground_truth):
-            min_length = min(len(predictions), len(ground_truth))
-            predictions = predictions[0:min_length]
-            ground_truth = ground_truth[0:min_length]
+    #    if len(predictions) != len(ground_truth):
+    #        min_length = min(len(predictions), len(ground_truth))
+    #        predictions = predictions[0:min_length]
+    #        ground_truth = ground_truth[0:min_length]
 
         loss = self.loss_calculation(predictions, ground_truth)
         self.log("test_loss", loss, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
