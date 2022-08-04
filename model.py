@@ -172,9 +172,6 @@ class LongDocumentSummarizerModel(LightningModule):
         print("prediction")
         for i in prediction:
             print(i)
-        print("ground truth")
-        for i in gt:
-            print(gt)
         return f1_score(gt, prediction)
 
 
@@ -192,7 +189,7 @@ class LongDocumentSummarizerModel(LightningModule):
                 if rounded[idx] == 1:
                     summary_sentences.append(sentence_list[idx])
             summary = ' '.join(summary_sentences).strip()
-            batch_of_gt.append(rounded)
+            batch_of_gt.append(np.asarray(rounded, dtype=np.float))
             batch_of_summaries.append(summary)
         return batch_of_summaries, batch_of_gt
 
