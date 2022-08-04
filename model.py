@@ -184,19 +184,14 @@ class LongDocumentSummarizerModel(LightningModule):
             for sent in doc.sents:
                 sentence_list.append(sent.text)
             rounded = np.where(predictions[i] > 0.65, 1., 0.)
-            print(rounded.dtype)
-            print(rounded)
             summary_sentences = []
             for idx, sentence in enumerate(sentence_list):
-                if rounded[idx] == 1:
+                if rounded[idx] == 1 and idx < len(sentence_list):
                     summary_sentences.append(sentence_list[idx])
             summary = ' '.join(summary_sentences).strip()
             batch_of_gt.append(rounded)
             batch_of_summaries.append(summary)
-        print(batch_of_gt)
         return batch_of_summaries, batch_of_gt
-
-
 
     def produce_summary_labels(self, results, text_sentence_length):
         results = results.cpu().detach().numpy()
@@ -205,7 +200,6 @@ class LongDocumentSummarizerModel(LightningModule):
             res = results[i]
             np_results.append(np.asarray(res[0:text_sentence_length[i]], dtype=np.float))
         return np_results
-
 
     def produce_summary_input_ids(self, results, text_sentence_length, sentence_list, top_k=4):
         results = results.flatten().cpu().detach().numpy()
@@ -224,7 +218,7 @@ class LongDocumentSummarizerModel(LightningModule):
         ).input_ids
         return produced_summary, produced_summary_input_ids
 
-    def get_ground_truth_labels(self, document_id, source='training'):
+    def get_ground_truth_labels(self, document_id, source='training', pad_width=400):
         if source == "validation":
             df = self.gt_validation_labels
         elif source == "test":
@@ -236,10 +230,11 @@ class LongDocumentSummarizerModel(LightningModule):
         gts = rows['labels'].tolist()
         np_gts = []
         for gt in gts:
+            gt = np.pad(gt, pad_width=(0, pad_width-len(gt)), constant_values=0.)
+            print(len(gt))
             np_gts.append(np.asarray(gt, dtype=np.float))
         print(np_gts)
-        length_list = [len(lst) for lst in gts]
-        return np_gts, length_list
+        return np_gts
 
 
     def training_step(self, batch, batch_idx):
@@ -247,18 +242,18 @@ class LongDocumentSummarizerModel(LightningModule):
         labels = batch["summary_input_ids"]
         document_id = batch["document_id"]
         cls_token_indexes = self.get_cls_token_indexes(input_ids, self.cls_token_id)
-        ground_truth, lengths = self.get_ground_truth_labels(document_id, source="train")
+        ground_truth = self.get_ground_truth_labels(document_id, source="train")
         outputs = self.forward(input_ids=input_ids,
                                labels=labels,
                                cls_token_indexes=cls_token_indexes)
-        predictions = self.produce_summary_labels(outputs, lengths)
+     #   predictions = self.produce_summary_labels(outputs, lengths)
 
    #     if len(predictions) != len(ground_truth):
    #         min_length = min(len(predictions), len(ground_truth))
    #         ground_truth = ground_truth[0:min_length]
    #         predictions = predictions[0:min_length]
 
-        loss = self.loss_calculation(predictions, ground_truth)
+        loss = self.loss_calculation(outputs, ground_truth)
         self.log("train_loss", loss, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
         return torch.autograd.Variable(loss, requires_grad=True)
 
@@ -270,13 +265,13 @@ class LongDocumentSummarizerModel(LightningModule):
         document_id = batch["document_id"]
         gt_summary = batch["summary"]
         cls_token_indexes = self.get_cls_token_indexes(input_ids, self.cls_token_id)
-        ground_truth, lengths = self.get_ground_truth_labels(document_id, source="validation")
+        ground_truth = self.get_ground_truth_labels(document_id, source="validation")
         outputs = self.forward(input_ids=input_ids,
                                labels=labels,
                                cls_token_indexes=cls_token_indexes)
 
-        predictions = self.produce_summary_labels(outputs, lengths)
-        produced_summary, rounded_predictions = self.produce_text_summary(predictions, text)
+      #  predictions = self.produce_summary_labels(outputs, lengths)
+        produced_summary, rounded_predictions = self.produce_text_summary(outputs, text)
 
    #     if len(predictions) != len(ground_truth):
    #         min_length = min(len(predictions), len(ground_truth))
@@ -286,7 +281,7 @@ class LongDocumentSummarizerModel(LightningModule):
 
         f1 = self.calculate_F1(rounded_predictions, ground_truth)
 
-        loss = self.loss_calculation(predictions, ground_truth)
+        loss = self.loss_calculation(outputs, ground_truth)
         self.log("val_loss", loss, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
         self.log("val_f1", f1, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
 
@@ -312,15 +307,15 @@ class LongDocumentSummarizerModel(LightningModule):
                                labels=labels,
                                cls_token_indexes=cls_token_indexes)
 
-        ground_truth, lengths = self.get_ground_truth_labels(document_id, source="test")
-        predictions = self.produce_summary_labels(outputs, lengths)
+        ground_truth = self.get_ground_truth_labels(document_id, source="test")
+     #   predictions = self.produce_summary_labels(outputs, lengths)
 
     #    if len(predictions) != len(ground_truth):
     #        min_length = min(len(predictions), len(ground_truth))
     #        predictions = predictions[0:min_length]
     #        ground_truth = ground_truth[0:min_length]
 
-        loss = self.loss_calculation(predictions, ground_truth)
+        loss = self.loss_calculation(outputs, ground_truth)
         self.log("test_loss", loss, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
         return loss
 
