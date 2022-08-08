@@ -229,7 +229,11 @@ class LongDocumentSummarizerModel(LightningModule):
         gts = rows['labels'].tolist()
         np_gts = []
         for gt in gts:
-            gt = np.pad(gt, pad_width=(0, pad_width-len(gt)), constant_values=0.)
+            length = len(gt)
+            if length < pad_width:
+                gt = np.pad(gt, pad_width=(0, pad_width-length), constant_values=0.)
+            else:
+                gt = gt[0:pad_width]
             np_gts.append(np.asarray(gt, dtype=np.float))
         return np_gts
 
