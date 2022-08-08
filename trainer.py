@@ -33,8 +33,8 @@ checkpoint_callback = ModelCheckpoint(dirpath="./checkpoints",
                                       filename="summarizer-checkpoint",
                                       save_top_k=1,
                                       verbose=True,
-                                      monitor="val_loss",
-                                      mode="min")
+                                      monitor="val_f1",
+                                      mode="max")
 
 logger = TensorBoardLogger("./logs",
                            name="longformer-summarizer",
