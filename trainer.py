@@ -13,7 +13,7 @@ print(torch.cuda.is_available())
 from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 
 MODEL_NAME_OR_PATH = 'allenai/longformer-base-4096'
-N_EPOCHS = 1
+N_EPOCHS = 5
 BATCH_SIZE = 1
 
 df_train, df_validation, df_test = get_train_test_validation()
