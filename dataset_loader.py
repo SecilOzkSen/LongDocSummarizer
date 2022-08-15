@@ -11,7 +11,7 @@ class CNNDailyMailDataset(Dataset):
     def __init__(self,
                  dataframe: pd.DataFrame,
                  tokenizer: LongformerTokenizer,
-                 input_token_limit: int = 4096,
+                 input_token_limit: int = 4000,
                  padding_limit: int = 400
                  ):
         self.dataset = dataframe
