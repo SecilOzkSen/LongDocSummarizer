@@ -44,5 +44,11 @@ trainer = pl.Trainer(logger=logger,
                      callbacks=checkpoint_callback,
                      max_epochs=N_EPOCHS,
                      )
-if __name__ == "__main__":
+
+
+def run():
     trainer.fit(model, data_module)
+
+
+if __name__ == "__main__":
+    run()
