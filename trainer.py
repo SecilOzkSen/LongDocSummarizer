@@ -14,7 +14,7 @@ from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 
 MODEL_NAME_OR_PATH = 'allenai/longformer-base-4096'
 N_EPOCHS = 5
-BATCH_SIZE = 1
+BATCH_SIZE = 2
 
 df_train, df_validation, df_test = get_train_test_validation()
 tokenizer = LongformerTokenizer.from_pretrained(MODEL_NAME_OR_PATH) #cls_token='[CLS]', sep_token='[SEP]')
@@ -43,6 +43,7 @@ logger = TensorBoardLogger("./logs",
 trainer = pl.Trainer(logger=logger,
                      callbacks=checkpoint_callback,
                      max_epochs=N_EPOCHS,
+                     num_sanity_val_steps=0
                      )
 
 

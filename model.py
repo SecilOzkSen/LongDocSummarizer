@@ -255,7 +255,7 @@ class LongDocumentSummarizerModel(LightningModule):
    #         predictions = predictions[0:min_length]
 
         loss = self.loss_calculation(outputs, ground_truth)
-        self.log("train_loss", loss, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
+        self.log("train_loss", loss, prog_bar=True, logger=True, sync_dist=True)
         return torch.autograd.Variable(loss, requires_grad=True)
 
 
@@ -283,15 +283,15 @@ class LongDocumentSummarizerModel(LightningModule):
         f1 = self.calculate_F1(rounded_predictions, ground_truth)
 
         loss = self.loss_calculation(outputs, ground_truth)
-        self.log("val_loss", loss, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
-        self.log("val_f1", f1, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
+        self.log("val_loss", loss, prog_bar=True, logger=True, sync_dist=True)
+        self.log("val_f1", f1, prog_bar=True, logger=True, sync_dist=True)
 
         if produced_summary != '':
             scores = self.rouge_score(produced_summary, gt_summary)
             print(scores)
-            self.log("rouge1_fmeasure", scores['rouge1_fmeasure'], prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
-            self.log("rouge2_fmeasure", scores['rouge2_fmeasure'], prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
-            self.log("rougeL_fmeasure", scores['rougeL_fmeasure'], prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
+            self.log("rouge1_fmeasure", scores['rouge1_fmeasure'], prog_bar=True, logger=True, sync_dist=True)
+            self.log("rouge2_fmeasure", scores['rouge2_fmeasure'], prog_bar=True, logger=True, sync_dist=True)
+            self.log("rougeL_fmeasure", scores['rougeL_fmeasure'], prog_bar=True, logger=True, sync_dist=True)
 
         return loss
 
@@ -313,7 +313,7 @@ class LongDocumentSummarizerModel(LightningModule):
     #        ground_truth = ground_truth[0:min_length]
 
         loss = self.loss_calculation(outputs, ground_truth)
-        self.log("test_loss", loss, prog_bar=True, logger=True, sync_dist=True, rank_zero_only=True)
+        self.log("test_loss", loss, prog_bar=True, logger=True, sync_dist=True)
         return loss
 
     def configure_optimizers(self):
