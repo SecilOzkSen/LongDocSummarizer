@@ -13,7 +13,7 @@ print(torch.cuda.is_available())
 from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 
 MODEL_NAME_OR_PATH = 'allenai/longformer-base-4096'
-N_EPOCHS = 5
+N_EPOCHS = 1
 BATCH_SIZE = 2
 
 df_train, df_validation, df_test = get_train_test_validation()
@@ -29,8 +29,8 @@ data_module = SummaryWithKeywordDataModule(train_df=df_train,
 
 model = LongDocumentSummarizerModel(longformer_model, tokenizer, batch_size=BATCH_SIZE, cls_token_id=tokenizer.cls_token_id)
 
-checkpoint_callback = ModelCheckpoint(dirpath="./checkpoints",
-                                      filename="summarizer-checkpoint",
+checkpoint_callback = ModelCheckpoint(dirpath="./checkpoints/summarizer-checkpoint/last.ckpt",
+                         #             filename="summarizer-checkpoint",
                                       save_top_k=1,
                                       verbose=True,
                                       monitor="val_loss",
@@ -43,7 +43,8 @@ logger = TensorBoardLogger("./logs",
 trainer = pl.Trainer(logger=logger,
                      callbacks=checkpoint_callback,
                      max_epochs=N_EPOCHS,
-                     num_sanity_val_steps=0
+                     num_sanity_val_steps=0,
+                     resume_from_checkpoint="./checkpoints/summarizer-checkpoint/last.ckpt"
                      )
 
 
