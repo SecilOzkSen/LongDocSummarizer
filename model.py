@@ -154,6 +154,7 @@ class LongDocumentSummarizerModel(LightningModule):
         ground_truth = torch.from_numpy(np.array(ground_truth))
         ground_truth = ground_truth.to(dtype=torch.double)
         loss = self.BCELoss(predictions, ground_truth)
+        print(loss)
         return loss
 
     def get_cls_token_indexes(self, input_ids, cls_token_id):
