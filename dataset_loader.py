@@ -60,7 +60,7 @@ class CNNDailyMailDataset(Dataset):
         ).input_ids
         summary_input_ids = self.tokenizer(
             summary,
-            max_length=512,
+            max_length=500,
             add_special_tokens=False,
             padding="max_length",
             truncation=True,
@@ -84,7 +84,7 @@ class SummaryWithKeywordDataModule(LightningDataModule):
                  test_df : pd.DataFrame,
                  tokenizer: LongformerTokenizer,
                  batch_size: int = 64,
-                 text_max_token_limit: int = 8192,
+                 text_max_token_limit: int = 4000,
                  ):
         super().__init__()
         self.train_df = train_df
